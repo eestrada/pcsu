@@ -13,7 +13,7 @@ If the number of files required exceeds the maximum allowed by the suffix length
 
     prsr = argparse.ArgumentParser(prog=NAME, description=DESCRIPTION,
         usage='''%(prog)s [-l line_count | -b n[k|m]] [-a suffix_length] [file[name]]''',
-        epilog=EPILOG)
+        epilog=EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter)
     prsr.add_argument('file', type=argparse.FileType(mode='rt'), default='-',
         nargs='?', help='''The pathname of the ordinary file to be split. If no
         input file is given or file is '-' , the standard input shall be
@@ -70,13 +70,31 @@ class suffix:
         sys.stderr.write(str(self.max_len) + '\n')
 
     def __iter__(self):
+        self.iter_count = 0
         return self
 
     def __next__(self):
-        raise StopIteration()
+        if self.iter_count < self.max_len: # Only iterate if we haven't maxed out
+            s = str()
+            for i in range(1, self.count + 1): # make string as long as the count
+                n = pow(26, i)
+                real = n % self.max_len
+                if (self.iter_count / n) > 1.0: # if number is bigger than current spot
+                    s = 'z' + s
+                elif False: # if number is smaller than current spot
+                    c = chr(self.iter_count + 97)
+                else: # if number is in the perfect range
+                    s = 'a' + s
+            self.iter_count += 1
+            return str(s)
+        else:
+            raise StopIteration()
 
 def processtext(args):
     si = suffix(args['a'])
+
+    for s in si:
+        sys.stderr.write('We are iterating: ' + s + '\n')
     raise NotImplementedError()
     
     l = True
