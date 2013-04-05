@@ -3,6 +3,65 @@ import sys
 import io
 import argparse
 import copy
+import string
+import collections
+
+class SuffixError(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
+
+class suffix(collections.Sequence):
+    '''This is an sequence class for alphabetic suffixes
+
+This class is used to generate alphabetic suffixes for the split command when
+creating output files.'''
+    def __init__(self, count = 2):
+        intc = int(count)
+        if intc < 1:
+            raise ValueError( "Value provided less than 1: " + str(count) )
+        self._iter_count = 0
+        self._count = intc
+        self._max_len = pow(26, intc)
+
+    def __len__(self):
+        return self._max_len
+
+    @staticmethod
+    def _idiv(i, j):
+        k = int(i) // int(j)
+        l = int(i) % int(j)
+        return k,l
+
+    def __iter__(self):
+        self._iter_count = 0
+        return self
+
+    def _next_helper(self, index):
+        if index < self._max_len: # Only iterate if we haven't maxed out
+            q = index
+            r = int()
+            l = list()
+            for i in range(self._count): # make string as long as the count
+                q,r = suffix._idiv( q, 26 )
+                l.append( string.ascii_lowercase[r] )
+
+            l.reverse()
+            return ''.join(l)
+        else:
+            raise IndexError('suffix object index out of range')
+
+    def __getitem__(self, index):
+        return self._next_helper(index)
+
+    def __next__(self):
+        try:
+            retval = self._next_helper(self._iter_count)
+            self._iter_count += 1
+            return retval
+        except IndexError:
+            raise StopIteration()
 
 def getargs(argv):
     NAME='split'
@@ -24,8 +83,8 @@ If the number of files required exceeds the maximum allowed by the suffix length
         prefix of the output files. The combined length of the basename of
         prefix and suffix_length cannot exceed {NAME_MAX} bytes. See the
         OPTIONS section.''')
-    prsr.add_argument('-a', metavar='suffix_length', default=2,
-        action='store', type=int, help='''Use suffix_length letters to form the
+    prsr.add_argument('-a', metavar='suffix_length', default=suffix(2),
+        action='store', type=suffix, help='''Use suffix_length letters to form the
         suffix portion of the filenames of the split file. If -a is not
         specified, the default suffix length shall be two. If the sum of the
         name operand and the suffix_length option-argument would create a
@@ -53,67 +112,54 @@ def bytecount(s):
     else:
         return int(s)
 
-def processargs(args):
-    retargs = args
-
-    if retargs['b'] != None:
-        retargs['file'] = retargs['file'].buffer
-        
-    return retargs
-
-
-class suffix:
-    '''This is an iterator class'''
-    def __init__(self, count):
-        self.count = count
-        self.max_len = pow(26, count)
-        sys.stderr.write(str(self.max_len) + '\n')
-
-    def __iter__(self):
-        self.iter_count = 0
-        return self
-
-    def __next__(self):
-        if self.iter_count < self.max_len: # Only iterate if we haven't maxed out
-            s = str()
-            for i in range(1, self.count + 1): # make string as long as the count
-                n = pow(26, i)
-                real = n % self.max_len
-                if (self.iter_count / n) > 1.0: # if number is bigger than current spot
-                    s = 'z' + s
-                elif False: # if number is smaller than current spot
-                    c = chr(self.iter_count + 97)
-                else: # if number is in the perfect range
-                    s = 'a' + s
-            self.iter_count += 1
-            return str(s)
-        else:
-            raise StopIteration()
-
 def processtext(args):
-    si = suffix(args['a'])
+    for sfx in args['a']:
+        with io.open(args['name'] + sfx, mode='wt') as of:
+            i = 0
+            l = True
+            while i < args['l'] and l:
+                l = args['file'].readline()
+                if not l:
+                    args['file'].close()
+                    return
+                of.write(l)
+                i += 1
 
-    for s in si:
-        sys.stderr.write('We are iterating: ' + s + '\n')
-    raise NotImplementedError()
-    
-    l = True
-    while l:
-        for i in range(args['l']):
-            l = args['file'].readline()
+    raise SuffixError('Ran out of all usable suffixes')
 
 def processbinary(args):
-    raise NotImplementedError()
+    f = args['file'].buffer
+    if args['b'] > io.DEFAULT_BUFFER_SIZE:
+        rsize = io.DEFAULT_BUFFER_SIZE
+    else:
+        rsize = args['b']
+    for sfx in args['a']:
+        with io.open(args['name'] + sfx, mode='wb') as of:
+            i = 0
+            b = True
+            while i < args['b'] and b:
+                b = f.read(rsize)
+                if not b:
+                    f.close()
+                    return
+                bytes_written = of.write(b)
+                if bytes_written != len(b):
+                    raise IOError('Bytes not written')
+                i += bytes_written
+
+    raise SuffixError('Ran out of all usable suffixes')
 
 def splitfile(args):
     if args['b'] != None: processbinary(args)
     else: processtext(args)
 
 def run(argv):
-    rawargs = getargs(argv)
-    args = processargs(rawargs)
+    args = getargs(argv)
     try: splitfile(args)
     except NotImplementedError: sys.stderr.write(str(args) + '\n')
+    except SuffixError as se:
+        sys.stderr.write(str(se.value) + '\n')
+        sys.exit(2)
     sys.exit(0)
 
 if __name__ == "__main__":
