@@ -15,12 +15,12 @@ class SuffixError(Exception):
 class suffix(collections.Sequence):
     '''This is an sequence class for alphabetic suffixes
 
-This class is used to generate alphabetic suffixes for the split command when
-creating output files.'''
+This class is used to generate base 26 alphabetic suffixes for the split
+command when creating output files.'''
     def __init__(self, count = 2):
         intc = int(count)
         if intc < 1:
-            raise ValueError( "Value provided less than 1: " + str(count) )
+            raise ValueError( "Value provided was less than 1: " + str(count) )
         self._iter_count = 0
         self._count = intc
         self._max_len = pow(26, intc)
@@ -127,12 +127,22 @@ def processtext(args):
 
     raise SuffixError('Ran out of all usable suffixes')
 
+def _getbufsz(chunk_size, maxbufsz = (io.DEFAULT_BUFFER_SIZE * 8) ):
+    bufsz = max(maxbufsz, 1)
+
+    while (chunk_size % bufsz) != 0:
+        bufsz = bufsz // 2
+
+    if bufsz < 1: bufsz = 1
+
+    return bufsz
+
 def processbinary(args):
     f = args['file'].buffer
-    if args['b'] > io.DEFAULT_BUFFER_SIZE:
-        rsize = io.DEFAULT_BUFFER_SIZE
-    else:
-        rsize = args['b']
+    rsize = io.DEFAULT_BUFFER_SIZE * 8
+    if args['b'] < rsize: rsize = args['b']
+    else: rsize = _getbufsz(args['b'], rsize)
+        
     for sfx in args['a']:
         with io.open(args['name'] + sfx, mode='wb') as of:
             i = 0
