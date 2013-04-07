@@ -112,36 +112,32 @@ def bytecount(s):
     else:
         return int(s)
 
-def processtext(args):
-    for sfx in args['a']:
-        with io.open(args['name'] + sfx, mode='wt') as of:
-            i = 0
-            l = True
-            while i < args['l'] and l:
-                l = args['file'].readline()
-                if not l:
-                    args['file'].close()
-                    return
-                of.write(l)
-                i += 1
+def _getbufsz(chunk_size = (io.DEFAULT_BUFFER_SIZE * 8),
+    maxbufsz = (io.DEFAULT_BUFFER_SIZE * 8) ):
+    '''Finds the optimal buffer size to read a chunk of data in a loop
 
-    raise SuffixError('Ran out of all usable suffixes')
+In order to save memory, even when a large value is requested to be split
+per file (i.e. chunk_size), the most that will be in memory at any one
+time is maxbufsz. However, since this may or may not be a multiple of
+chunk_size, this function finds the next largest value that IS a multiple
+of chunk_size so the copying of the file chunk can be as efficient as
+possible. As a warning, the file split size should NOT be a prime number
+larger than maxbufsz, as the files will ultimately be moved one byte at a
+time (i.e. VERY SLOWLY!).'''
 
-def _getbufsz(chunk_size, maxbufsz = (io.DEFAULT_BUFFER_SIZE * 8) ):
+    if chunk_size <= maxbufsz: return chunk_size
+
     bufsz = max(maxbufsz, 1)
 
     while (chunk_size % bufsz) != 0:
-        bufsz = bufsz // 2
-
-    if bufsz < 1: bufsz = 1
+        bufsz -= 1
 
     return bufsz
 
 def processbinary(args):
     f = args['file'].buffer
-    rsize = io.DEFAULT_BUFFER_SIZE * 8
-    if args['b'] < rsize: rsize = args['b']
-    else: rsize = _getbufsz(args['b'], rsize)
+
+    rsize = _getbufsz(args['b'])
         
     for sfx in args['a']:
         with io.open(args['name'] + sfx, mode='wb') as of:
@@ -156,6 +152,23 @@ def processbinary(args):
                 if bytes_written != len(b):
                     raise IOError('Bytes not written')
                 i += bytes_written
+
+    raise SuffixError('Ran out of all usable suffixes')
+
+def processtext(args):
+    lnum = _getbufsz(args['l'], 1024)
+
+    for sfx in args['a']:
+        with io.open(args['name'] + sfx, mode='wt') as of:
+            i = 0
+            lns = True
+            while i < args['l'] and lns:
+                lns = args['file'].readlines(lnum)
+                if not lns:
+                    args['file'].close()
+                    return
+                retval = of.writelines(lns)
+                i += len(lns)
 
     raise SuffixError('Ran out of all usable suffixes')
 
