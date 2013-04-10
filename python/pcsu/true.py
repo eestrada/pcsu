@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 import sys
 
+def run(argv):
+    return 0
+
 if __name__ == "__main__":
-    sys.exit(0)
+    retval = run(sys.argv)
+    sys.exit(retval)
+
