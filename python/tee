@@ -1,0 +1,8 @@
+#!/usr/bin/env python3
+
+import sys
+from pcsu import tee
+
+if __name__ == '__main__':
+    tee.run(sys.argv)
+
