@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-
 import sys
-from pcsu import tee
+from pcsu import tee as util
 
 if __name__ == '__main__':
-    tee.run(sys.argv)
+    util.run(sys.argv)
 

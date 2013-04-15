@@ -1,1 +1,7 @@
-./pcsu/true.py
+#!/usr/bin/env python3
+import sys
+from pcsu import true as util
+
+if __name__ == "__main__":
+    util.run(sys.argv)
+
