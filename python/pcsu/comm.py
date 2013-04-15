@@ -3,15 +3,20 @@ import sys
 import os
 
 def run(argv):
+    prog = os.path.basename(argv[0])
+    msg = 'utility "{}" not yet implemented'.format(prog)
+
     try:
-        prog = os.path.basename(argv[0])
-        msg = 'utility "{}" not yet implemented'.format(prog)
+        # Run main functions in here
         raise NotImplementedError(msg, 1)
     except Exception as e:
         sys.stderr.write('{}: {}\n'.format(e.__class__.__name__, e.args[0]))
-        return e.args[1]
+        raise SystemExit(e.args[1])
+
+def _test(argv):
+    '''Run tests on module code'''
+    run(argv)
 
 if __name__ == "__main__":
-    retval = run(sys.argv)
-    sys.exit(retval)
+    _test(sys.argv)
 

@@ -2,9 +2,8 @@
 import sys
 
 def run(argv):
-    return 1
+    raise SystemExit(1)
 
 if __name__ == "__main__":
-    retval = run(sys.argv)
-    sys.exit(retval)
+    run(sys.argv)
 
