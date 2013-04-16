@@ -1,6 +1,6 @@
 #PCSU
 
-**PCSU** stands for **P**OSIX **C**ompliant **S**hell **U**tilities; it is an effort to create a set of 100% POSIX compliant shell utilities according to http://pubs.opengroup.org/onlinepubs/9699919799/ (the POSIX.1-2008 standard). As far as I have been able to glean, there is no mention of implemention details for the utilities, only what their required behavior needs to be. Thus, the initial effort is to create them in Py3K. Implentations in other languages, such as C99 and C++11, may be added during future efforts.
+**PCSU** stands for **P**OSIX **C**ompliant **S**hell **U**tilities; it is an effort to create a set of 100% POSIX compliant shell utilities according to the [POSIX.1-2008 standard] (http://pubs.opengroup.org/onlinepubs/9699919799/). As far as I have been able to glean, there is no mention of implemention details for the utilities, only what their required behavior needs to be. Thus, the initial effort is to create them in Py3K. Implentations in other languages, such as C99 and C++11, may be added during future efforts.
 
 Taking a page from the reference implementations of the PNG and DEFLATE standards, **PCSU** is liberally licensed under the zlib license. Thus, it can used almost anywhere for any purpose with the one main caveat being the the license notice must accompany source distributions. See the LICENSE file for details.
 
