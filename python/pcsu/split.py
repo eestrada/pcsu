@@ -17,13 +17,16 @@ class suffix(collections.Sequence):
 
 This class is used to generate base 26 alphabetic suffixes for the split
 command when creating output files.'''
-    def __init__(self, count = 2):
-        intc = int(count)
-        if intc < 1:
-            raise ValueError( "Value provided was less than 1: " + str(count) )
+    def __init__(self, count=2, base=26, alphabet=string.ascii_lowercase):
+        self._count = int(count)
+        if self._count < 1:
+            raise ValueError("Value provided was less than 1: {0}".format(self._count))
+        elif base > len(alphabet):
+            s = "base({0}) must be <= length of alphabet({1}): ".format(base, len(alphabet)) 
+            raise ValueError(s)
         self._iter_count = 0
-        self._count = intc
-        self._max_len = pow(26, intc)
+        self._max_len = pow(26, self._count)
+        self._alphabet = alphabet
 
     def __len__(self):
         return self._max_len
@@ -32,7 +35,7 @@ command when creating output files.'''
     def _idiv(i, j):
         k = int(i) // int(j)
         l = int(i) % int(j)
-        return k,l
+        return k, l
 
     def __iter__(self):
         self._iter_count = 0
@@ -44,8 +47,8 @@ command when creating output files.'''
             r = int()
             l = list()
             for i in range(self._count): # make string as long as the count
-                q,r = suffix._idiv( q, 26 )
-                l.append( string.ascii_lowercase[r] )
+                q,r = suffix._idiv(q, 26)
+                l.append(self._alphabet[r])
 
             l.reverse()
             return ''.join(l)
@@ -177,14 +180,17 @@ def splitfile(args):
     else: processtext(args)
 
 def run(argv):
-    args = getargs(argv)
+    args = getargs(argv[1:])
     try: splitfile(args)
     except NotImplementedError: sys.stderr.write(str(args) + '\n')
     except SuffixError as se:
         sys.stderr.write(str(se.value) + '\n')
-        sys.exit(2)
-    sys.exit(0)
+        raise SystemExit(2)
+    except:
+        sys.stderr.write('An unspecified error occured.\n')
+        raise SystemExit(1)
+    raise SystemExit(0)
 
 if __name__ == "__main__":
-    run(sys.argv[1:])
+    run(sys.argv)
 
