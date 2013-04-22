@@ -1,4 +1,4 @@
-__all__ = (
+__all__ = [
     'at.py',
     'awk.py',
     'basename.py',
@@ -73,4 +73,5 @@ __all__ = (
     'uuencode.py',
     'wait.py',
     'wc.py',
-)
+]
+
