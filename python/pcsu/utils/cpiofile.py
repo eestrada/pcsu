@@ -10,20 +10,43 @@ class ReadError(CpioError):
 
 class CpioInfo(object):
     __magic_num = b'070707' 
-    def __init__(self, name, mode):
-        self.c_magic = __magic_num
-        self.c_dev = NotImplemented
-        self.c_ino = NotImplemented
-        self.c_mode = NotImplemented
-        self.c_uid = NotImplemented
-        self.c_gid = NotImplemented
-        self.c_nlink = NotImplemented
-        self.c_rdev = NotImplemented
-        self.c_mtime = NotImplemented
-        self.c_namesize = NotImplemented
-        self.c_filesize = NotImplemented
-        self.c_name = NotImplemented
-        self.c_filedata = NotImplemented
+    def __init__(self, name=""):
+        # Public data attributes
+        self.name = str()
+        self.size = int()
+        self.mtime = int()
+        self.mode = int()
+        self.type = int()
+        self.uid = int()
+        self.gid = int()
+        self.dev = int()
+        self.ino = int()
+        self.nlink = int()
+        self.rdev = int()
+
+        # Private data attributes
+        self.__c_magic = __magic_num
+        self.__c_dev = NotImplemented
+        self.__c_ino = NotImplemented
+        self.__c_mode = NotImplemented
+        self.__c_uid = NotImplemented
+        self.__c_gid = NotImplemented
+        self.__c_nlink = NotImplemented
+        self.__c_rdev = NotImplemented
+        self.__c_mtime = NotImplemented
+        self.__c_namesize = NotImplemented
+        self.__c_filesize = NotImplemented
+        self.__c_name = NotImplemented
+        self.__c_filedata = NotImplemented
+
+    def frombuf(self, buf):
+        raise NotImplementedError()
+
+    def fromcpiofile(self, cpiofile):
+        raise NotImplementedError()
+
+    def tobuf(self, errors='raise'):
+        raise NotImplementedError()
 
 class CpioFile(object):
     def __init__(self, name, mode):
