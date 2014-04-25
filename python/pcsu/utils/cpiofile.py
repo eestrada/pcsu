@@ -1,11 +1,54 @@
+from __future__ import division, absolute_import, with_statement, print_function, unicode_literals
+
 import sys
 import os
 import io
+import stat
+import time
+import copy
+
+OLD_BINARY_FORMAT = 0
+PORTABLE_ASCII_FORMAT = 1
+NEW_ASCII_FORMAT = 2
+DEFAULT_FORMAT = PORTABLE_ASCII_FORMAT
+
+ASCII_MAGIC = b'070707' 
+BINARY_MAGIC = oct(ASCII_MAGIC) 
 
 class CpioError(Exception):
+    """Base Exception."""
     pass
 
 class ReadError(CpioError):
+    """Exception for unreadable cpio archives."""
+    pass
+
+class StreamError(CpioError):
+    """Exception for unsupported operations on stream-like CpioFiles."""
+    pass
+
+class ExtractError(CpioError):
+    """General exception for extract errors."""
+    pass
+
+class HeaderError(CpioError):
+    """Base exception for header errors."""
+    pass
+
+class EmptyHeaderError(HeaderError):
+    """Exception for empty headers."""
+    pass
+
+class TruncatedHeaderError(HeaderError):
+    """Exception for truncated headers."""
+    pass
+
+class EOFHeaderError(HeaderError):
+    """Exception for end of file headers."""
+    pass
+
+class InvalidHeaderError(HeaderError):
+    """Exception for invalide headers."""
     pass
 
 class CpioInfo(object):
@@ -51,6 +94,9 @@ class CpioInfo(object):
 class CpioFile(object):
     def __init__(self, name, mode):
         pass
+
+def open(name=None, mode='r', fileobj=None, bufsize=10240, **kwargs):
+    pass
 
 def is_cpiofile(name):
     try:
