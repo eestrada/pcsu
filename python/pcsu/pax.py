@@ -1,16 +1,23 @@
 #!/usr/bin/env python3
 import sys
 import io
+import copy
 import argparse
 import string
 import collections
 import textwrap
 
+from .utils import cpiofile
+import tarfile
+
 def getargs(argv):
+    argv = list(copy.copy(argv))
+
+    #NAME='pax'
+    NAME=argv.pop(0)
+
     t = textwrap.TextWrapper(width=70, replace_whitespace=False, drop_whitespace=True,
         expand_tabs=False)
-
-    NAME='pax'
 
     DESCRIPTION= t.fill('''The pax utility shall read, write, and write lists of the members of archive files and copy directory hierarchies. A variety of archive formats shall be supported; see the -x format option.
 
@@ -87,6 +94,10 @@ The action to be taken depends on the presence of the -r and -w options. The fou
     ns = prsr.parse_args(argv)
     args = vars(ns)
 
+    # FIXME: This assumes we are always reading from stdin, which may not always be the case
+    if args['file'] is None:
+        args['file'] = sys.stdin.detach()
+
     return args
 
 def _blocksize(string):
@@ -96,7 +107,13 @@ def _blocksize(string):
     return retval
 
 def listArchive(args):
-    raise NotImplementedError()
+    cpiofp = cpiofile.open(fileobj=args['file'])
+    print(cpiofp)
+    
+    for farch in cpiofp:
+        print(farch)
+    #sys.stdout.buffer.write(args['file'].read())
+    #raise NotImplementedError('pax list functionality not implemented')
 
 def createArchive(args):
     raise NotImplementedError()
@@ -104,14 +121,17 @@ def createArchive(args):
 def extractArchive(args):
     raise NotImplementedError()
 
-def run(argv):
+def main(argv):
     args = getargs(argv)
     try:
         listArchive(args)
-    except NotImplementedError:
-        sys.stderr.write(str(args) + '\n')
+    except NotImplementedError as e:
+        sys.stderr.write('Exception caught!\n')
+        sys.stderr.write('%s: %s\n' % (e, str(args)))
+        raise e
         sys.exit(2)
     sys.exit(0)
 
 if __name__ == "__main__":
-    run(sys.argv[1:])
+    main(sys.argv)
+

@@ -1,0 +1,7 @@
+#!/usr/bin/env python3
+import sys
+from pcsu import pax as util
+
+if __name__ == "__main__":
+    util.main(sys.argv)
+

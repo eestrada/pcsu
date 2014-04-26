@@ -6,10 +6,13 @@ import io
 import stat
 import time
 import copy
+import logging
 
 from builtins import open as _open # Since 'open' is TarFile.open
 from builtins import type as _type 
 
+_log = logging.getLogger('pcsu.utils.cpiofile')
+_log.setLevel(logging.DEBUG)
 #######################################################################
 # cpio.h constants
 #######################################################################
@@ -67,7 +70,7 @@ CTGTYPE =   C_ISCTG
 LNKTYPE =   C_ISLNK
 SOCKTYPE =  C_ISSOCK
 
-class CpioError(Exception, object):
+class CpioError(Exception):
     """Base Exception."""
     pass
 
@@ -109,7 +112,7 @@ class CpioInfo(object):
         self.magic = MAGIC
         self.dev = 0
         self.ino = 0
-        self.mode = 0644
+        self.mode = 0o644
         self.uid = 0
         self.gid = 0
         self.nlink = 0
@@ -125,13 +128,50 @@ class CpioInfo(object):
         self.offset_data = 0    # offset to file data
         self.cpiofile = None    # reference to CpioFile object
 
-    def frombuf(self, buf):
+    def __str__(self):
+        return str(vars(self))
+
+    @classmethod
+    def frombuf(cls, buf):
+        if len(buf) == 0:
+            raise EmptyHeaderError()
+
+        info = cls()
+        ba = bytearray(buf)
+
+        info.magic = int(ba[:6], base=8)
+        del ba[:6]
+        info.dev = int(ba[:6], base=8)
+        del ba[:6]
+        info.ino = int(ba[:6], base=8)
+        del ba[:6]
+        info.mode = int(ba[:6], base=8)
+        del ba[:6]
+        info.uid = int(ba[:6], base=8)
+        del ba[:6]
+        info.gid = int(ba[:6], base=8)
+        del ba[:6]
+        info.nlink = int(ba[:6], base=8)
+        del ba[:6]
+        info.rdev = int(ba[:6], base=8)
+        del ba[:6]
+        info.mtime = int(ba[:11], base=8)
+        del ba[:11]
+        info.namesize = int(ba[:6], base=8)
+        del ba[:6]
+        info.size = int(ba[:11], base=8)
+        del ba[:11]
+
+        return info
+
+    @classmethod
+    def fromcpiofile(cls, cpiofile):
         raise NotImplementedError()
 
-    def fromcpiofile(self, cpiofile):
-        raise NotImplementedError()
+    fromfile = fromcpiofile
 
-    def tobuf(self, format=DEFAULT_FORMAT, errors='strict'):
+    @classmethod
+    def tobuf(cls, format=DEFAULT_FORMAT, errors='strict'):
         raise NotImplementedError()
 
     def isfile(self):
@@ -169,27 +209,62 @@ class CpioMember(io.RawIOBase):
         self.cur_pos = 0
 
     def isatty(self):
-        raise NotImplementedError()
+        return self.cpioinfo.cpiofile.fileobj.isatty()
 
-    def readable(self): return True
+    def readable(self):
+        return self.cpioinfo.cpiofile.fileobj.readable()
 
-    def seekable(self): return True
+    def seekable(self):
+        return self.cpioinfo.cpiofile.fileobj.seekable()
 
     def writable(self): return False
 
 class CpioFile(object):
-    def __init__(self, name, mode, **kwargs):
-        pass
+    def __init__(self, name=None, mode='r', fileobj=None, **kwargs):
+        if len(mode) > 1 or mode not in 'rwa':
+            raise ValueError("improper mode supplied: '%s'" % mode)
 
-    def open(self, **kwargs):
-        raise NotImplementedError()
+        self.mode = mode
+        self._true_mode = {'r': 'rb', 'w': 'wb', 'a': 'ab'}[mode]
+
+        if fileobj is not None:
+            self.fileobj = fileobj
+            self._close_fileobj = False
+            if hasattr(fileobj, 'mode'):
+                self._mode = fileobj.mode
+            if name is None and hasattr(fileobj, 'name'):
+                name = fileobj.name
+        elif name is not None:
+            self.fileobj = io.open(name, mode=self._true_mode)
+            self._close_fileobj = True
+        else:
+            raise ValueError("At least one of 'name' or 'fileobj' must have a value. Both were 'None'")
+
+        self.name = name
+
+        self.closed = False
+
+        self._info_list = []
+
+        self._current_member = None
+
+        # all other used keyword arguments
+        self.format = kwargs.get('format', DEFAULT_FORMAT)
+        self.dereference = kwargs.get('dereference', False)
+        self.cpioinfocls = kwargs.get('cpioinfo', CpioInfo)
+
+
+    @classmethod
+    def open(cls, name=None, mode='r', fileobj=None, bufsize=10240, **kwargs):
+        msg = 'CpioFile.open has been called with %s\n' % fileobj
+        _log.debug(msg)
+        return cls(name, mode, fileobj, **kwargs)
 
     def getmember(self, name):
         raise NotImplementedError()
 
     def getmembers(self):
-        return []
-        raise NotImplementedError()
+        return self._info_list
 
     def getnames(self):
         return []
@@ -198,7 +273,27 @@ class CpioFile(object):
         return []
 
     def next(self):
-        return None
+        if self._current_member is not None:
+            self.fileobj.seek(self._current_member.offset_data + self._current_member.size)
+
+        position = self.fileobj.tell()
+            
+        buf = self.fileobj.read(512)
+        try:
+            info = self.cpioinfocls.frombuf(buf)
+        except HeaderError as e:
+            return None
+        else:
+            info.offset_hdr = position
+            info.offset_data = position + info.namesize + 76
+            self.fileobj.seek(info.offset_hdr + 76)
+            info.name = self.fileobj.read(info.namesize - 1)
+            self.fileobj.seek(1, io.SEEK_CUR) # skip null at end of file name
+            info.cpiofile = self # make reference to self
+            self._current_member = info # make this info object the current info object
+
+            self._info_list.append(info) # append to list of info objects
+            return info
 
     def extractall(self, path=".", members=None):
         raise NotImplementedError()
@@ -219,7 +314,12 @@ class CpioFile(object):
         return False
 
     def close(self):
-        pass
+        if self.closed: return
+
+        # TODO: fill remainder of block with NULLs.
+
+        if self._close_fileobj: self.fileobj.close()
+        else: self.fileobj.flush()
 
     def __enter__(self):
         return self
@@ -237,8 +337,7 @@ class CpioFile(object):
                 break
             yield info
 
-def open(name=None, mode='r', fileobj=None, bufsize=10240, **kwargs):
-    pass
+open = CpioFile.open
 
 def is_cpiofile(name):
     try:
@@ -257,7 +356,8 @@ def main(argv):
         # Run main functions in here
         raise NotImplementedError(msg)
     except Exception as e:
-        sys.stderr.write('{}: {}\n'.format(e.__class__.__name__, e))
+        _log.error('{}: {}\n'.format(e.__class__.__name__, e))
+        #sys.stderr.write('{}: {}\n'.format(e.__class__.__name__, e))
         sys.exit(1)
 
 def _test(argv):
