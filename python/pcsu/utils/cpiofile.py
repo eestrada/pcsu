@@ -40,6 +40,7 @@ C_ISCTG =   int('0110000')
 C_ISLNK =   int('0120000')
 C_ISSOCK =  int('0140000')
 
+
 MAGIC = b'070707'
 
 # end of cpio.h constants
@@ -57,8 +58,16 @@ POSIX_FORMAT = 1
 ASCII_FORMAT = 2
 DEFAULT_FORMAT = POSIX_FORMAT
 
+DIRTYPE =   C_ISDIR
+REGTYPE =   C_ISREG
+FIFOTYPE =  C_ISFIFO
+BLKTYPE =   C_ISBLK
+CHRTYPE =   C_ISCHR
+CTGTYPE =   C_ISCTG
+LNKTYPE =   C_ISLNK
+SOCKTYPE =  C_ISSOCK
 
-class CpioError(Exception):
+class CpioError(Exception, object):
     """Base Exception."""
     pass
 
@@ -95,35 +104,26 @@ class InvalidHeaderError(HeaderError):
     pass
 
 class CpioInfo(object):
-    __magic_num = b'070707' 
     def __init__(self, name=""):
         # Public data attributes
-        self.name = str()
-        self.size = int()
-        self.mtime = int()
-        self.mode = int()
-        self.type = int()
-        self.uid = int()
-        self.gid = int()
-        self.dev = int()
-        self.ino = int()
-        self.nlink = int()
-        self.rdev = int()
+        self.magic = MAGIC
+        self.dev = 0
+        self.ino = 0
+        self.mode = 0644
+        self.uid = 0
+        self.gid = 0
+        self.nlink = 0
+        self.rdev = 0
+        self.mtime = 0
+        self.namesize = 0
+        self.size = 0
 
-        # Private data attributes
-        self.__c_magic = __magic_num
-        self.__c_dev = NotImplemented
-        self.__c_ino = NotImplemented
-        self.__c_mode = NotImplemented
-        self.__c_uid = NotImplemented
-        self.__c_gid = NotImplemented
-        self.__c_nlink = NotImplemented
-        self.__c_rdev = NotImplemented
-        self.__c_mtime = NotImplemented
-        self.__c_namesize = NotImplemented
-        self.__c_filesize = NotImplemented
-        self.__c_name = NotImplemented
-        self.__c_filedata = NotImplemented
+        self.name = str(name)
+        self.type = REGTYPE
+
+        self.offset_hdr = 0     # offset to header data
+        self.offset_data = 0    # offset to file data
+        self.cpiofile = None    # reference to CpioFile object
 
     def frombuf(self, buf):
         raise NotImplementedError()
@@ -131,21 +131,111 @@ class CpioInfo(object):
     def fromcpiofile(self, cpiofile):
         raise NotImplementedError()
 
-    def tobuf(self, errors='raise'):
+    def tobuf(self, format=DEFAULT_FORMAT, errors='strict'):
         raise NotImplementedError()
+
+    def isfile(self):
+        return self.isreg()
+
+    def isreg(self):
+        return self.type == REGTYPE
+
+    def isdir(self):
+        return self.type == DIRTYPE
+
+    def issym(self):
+        return self.type == LNKTYPE
+
+    def islnk(self):
+        raise NotImplementedError()
+
+    def ischr(self):
+        return self.type == CHRTYPE
+
+    def isblk(self):
+        return self.type == BLKTYPE
+
+    def isfifo(self):
+        return self.type == FIFOTYPE
+
+    def isdev(self):
+        return self.ischr() or self.isblk() or self.isfifo()
+
+class CpioMember(io.RawIOBase):
+    def __init__(self, cpioinfo):
+        if not cpioinfo.cpiofile:
+            raise ValueError('CpioInfo object is not associated with a usable CpioFile object.')
+        self.cpioinfo = copy.copy(cpioinfo)
+        self.cur_pos = 0
+
+    def isatty(self):
+        raise NotImplementedError()
+
+    def readable(self): return True
+
+    def seekable(self): return True
+
+    def writable(self): return False
 
 class CpioFile(object):
     def __init__(self, name, mode, **kwargs):
+        pass
+
+    def open(self, **kwargs):
+        raise NotImplementedError()
+
+    def getmember(self, name):
+        raise NotImplementedError()
+
+    def getmembers(self):
+        return []
+        raise NotImplementedError()
+
+    def getnames(self):
+        return []
+
+    def list(self, verbose=True):
+        return []
+
+    def next(self):
+        return None
+
+    def extractall(self, path=".", members=None):
+        raise NotImplementedError()
+
+    def extract(self, member, path="."):
+        raise NotImplementedError()
+
+    def extractfile(self, member):
+        raise NotImplementedError()
+
+    def add(self, name, **kwargs):
+        raise NotImplementedError()
+
+    def addfile(self, cpioinfo, fileobj=None):
+        raise NotImplementedError()
+
+    def gettarinfo(name=None, arcname=None, fileobj=None):
+        return False
+
+    def close(self):
         pass
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
         return False
 
-    def open(self, **kwargs):
-        raise NotImplementedError()
+    def __iter__(self):
+        """Get an iterator over CpioInfo objects in CpioFile object."""
+
+        while True:
+            info = self.next()
+            if info is None:
+                break
+            yield info
 
 def open(name=None, mode='r', fileobj=None, bufsize=10240, **kwargs):
     pass
@@ -159,7 +249,7 @@ def is_cpiofile(name):
         cf.close()
         return True
 
-def run(argv):
+def main(argv):
     prog = os.path.basename(argv[0])
     msg = 'utility "{}" not yet implemented'.format(prog)
 
@@ -168,11 +258,11 @@ def run(argv):
         raise NotImplementedError(msg)
     except Exception as e:
         sys.stderr.write('{}: {}\n'.format(e.__class__.__name__, e))
-        raise SystemExit(1)
+        sys.exit(1)
 
 def _test(argv):
     '''Run tests on module code'''
-    run(argv)
+    main(argv)
 
 if __name__ == "__main__":
     _test(sys.argv)
