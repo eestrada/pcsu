@@ -139,8 +139,16 @@ class CpioInfo(object):
         info = cls()
         ba = bytearray(buf)
 
-        info.magic = int(ba[:6], base=8)
-        del ba[:6]
+        _magic = ba[:6]
+        try:
+            info.magic = int(ba[:6], base=8)
+        except ValueError as e:
+            raise InvalidHeaderError()
+        else:
+            if _magic != b'070707':
+                raise InvalidHeaderError()
+            del _magic
+            del ba[:6]
         info.dev = int(ba[:6], base=8)
         del ba[:6]
         info.ino = int(ba[:6], base=8)
@@ -274,6 +282,8 @@ class CpioFile(object):
 
     def next(self):
         if self._current_member is not None:
+            if self._current_member.name == b'TRAILER!!!':
+                return None
             self.fileobj.seek(self._current_member.offset_data + self._current_member.size)
 
         position = self.fileobj.tell()
@@ -292,6 +302,8 @@ class CpioFile(object):
             info.cpiofile = self # make reference to self
             self._current_member = info # make this info object the current info object
 
+            if self._current_member.name == b'TRAILER!!!':
+                return None
             self._info_list.append(info) # append to list of info objects
             return info
 
