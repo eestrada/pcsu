@@ -7,7 +7,7 @@ utilities according to the [POSIX.1-2008 standard]
 been able to glean, there is no mention of implemention details for
 the utilities, only what their required behavior needs to be. Thus,
 the initial effort is to create them in Py3K. Implentations in other
-languages, such as C99 and C++11, may be added during future efforts.
+languages, such as Racket, may be added during future efforts.
 
 Taking a page from the reference implementations of the PNG and
 DEFLATE standards, **PCSU** is liberally licensed under the zlib
@@ -62,8 +62,8 @@ argparse is also included in Python 2.7, it may theoretically be
 possible to use that version of Python as well, although no official
 testing has been done to verify that).
 
-Lastly, future implementations in other languages, such as C99 and
-C++11, are both possible and probable.
+Lastly, future implementations in other languages, such as Racket, are
+both possible and probable.
 
 ####Utility X isn't implemented yet and I really need/want it. Will you prioritize it?
 
