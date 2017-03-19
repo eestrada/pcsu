@@ -1,5 +1,9 @@
 #PCSU
 
+[![Run Status](https://api.shippable.com/projects/58afc19ab1c2a40600ebbf37/badge?branch=master)](https://app.shippable.com/github/eestrada/pcsu)
+
+--------------------------------------------------------------------
+
 **PCSU** stands for **P**OSIX **C**ompliant **S**hell **U**tilities;
 it is an effort to create a set of 100% POSIX compliant shell
 utilities according to the [POSIX.1-2008 standard]
