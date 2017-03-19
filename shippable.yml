@@ -1,0 +1,26 @@
+language: none
+
+env:
+    - IMAGE="jackfirth/racket" TAG="6.0" MAKE_TARGET="racket_test"
+    - IMAGE="jackfirth/racket" TAG="6.1" MAKE_TARGET="racket_test"
+    - IMAGE="jackfirth/racket" TAG="6.2" MAKE_TARGET="racket_test"
+    - IMAGE="jackfirth/racket" TAG="6.3" MAKE_TARGET="racket_test"
+    - IMAGE="jackfirth/racket" TAG="6.4" MAKE_TARGET="racket_test"
+    - IMAGE="jackfirth/racket" TAG="6.5" MAKE_TARGET="racket_test"
+    - IMAGE="jackfirth/racket" TAG="6.6" MAKE_TARGET="racket_test"
+    - IMAGE="jackfirth/racket" TAG="6.7" MAKE_TARGET="racket_test"
+    - IMAGE="jackfirth/racket" TAG="6.8" MAKE_TARGET="racket_test"
+    - IMAGE="jackfirth/racket" TAG="latest" MAKE_TARGET="racket_test"
+
+matrix:
+  allow_failures:
+    - env:  TAG="latest"
+
+build:
+  pre_ci_boot:
+    image_name: "${IMAGE}"
+    image_tag: "${TAG}"
+    pull: true
+
+  ci:
+    - "make ${MAKE_TARGET}"
