@@ -1,4 +1,4 @@
-#PCSU
+# PCSU
 
 [![Run Status](https://api.shippable.com/projects/58afc19ab1c2a40600ebbf37/badge?branch=master)](https://app.shippable.com/github/eestrada/pcsu)
 
@@ -19,7 +19,7 @@ license. Thus, it can used almost anywhere for any purpose with the
 one main caveat being the the license notice must accompany source
 distributions. See the LICENSE file for details.
 
-##Current Limitations
+## Current Limitations
 
 Certain utilities mention in the standard are currently beyond the
 scope of this project (and some may never be within the scope of this
@@ -32,9 +32,9 @@ implemented as part of this effort. Besides, there are number of
 mature and robust C compilers that are liberally licensed and freely
 available (e.g. Clang, GCC, etc.).
 
-##FAQ
+## FAQ
 
-####Other libraries of shell utilities already exist. Why create this project?
+#### Other libraries of shell utilities already exist. Why create this project?
 
 This project is mainly for my own learning and benefit. If it is
 useful to someone else, then all the better. Also, it would be nice to
@@ -47,7 +47,7 @@ impression of functionality that may not exist in all
 implementations. Having utilities that are strictly compliant allows
 portability testing that might not otherwise be possible.
 
-####Why do the intial implementation in Python 3.x?
+#### Why do the intial implementation in Python 3.x?
 
 Compared to most other languages, Python is easy to use and fast to
 prototype in. Personal computers have become fast enough that
@@ -69,7 +69,7 @@ testing has been done to verify that).
 Lastly, future implementations in other languages, such as Racket, are
 both possible and probable.
 
-####Utility X isn't implemented yet and I really need/want it. Will you prioritize it?
+#### Utility X isn't implemented yet and I really need/want it. Will you prioritize it?
 
 I am currently only one person working on this in my free time, so my
 resources are limited. However, if you want a certain utility and have
