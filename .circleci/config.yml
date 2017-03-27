@@ -1,0 +1,32 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/pcsu
+    docker:
+      - image: jackfirth/racket:6.8
+    steps:
+      - checkout
+      - run:
+          name: Install as Linked Package
+          working_directory: racket
+          command: raco pkg install --deps search-auto --link pcsu
+      - run:
+          name: Run Tests
+          command: raco test -x -p pcsu
+      # # this can be removed
+      # - run:
+      #     name: Locate site Packages
+      #     command: python -c "import site; print(site.getsitepackages())"
+      # # Upload test results
+      # - store_test_results:
+      #     path: /tmp/test-results
+      # # Save artifacts
+      # - store_artifacts:
+      #     path: /tmp/artifacts
+      #     destination: build
+      # # Deploy staging
+      # - deploy:
+      #     command: |
+      #       if [ "${CIRCLE_BRANCH}" == "staging" ];
+      #         then ansible-playbook site.yml -i staging;
+      #       fi
