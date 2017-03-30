@@ -1,5 +1,18 @@
 version: 2
 jobs:
+  build:
+    working_directory: ~/pcsu
+    docker:
+      - image: jackfirth/racket
+    steps:
+      - checkout
+      - run:
+          name: Install as Linked Package
+          working_directory: racket
+          command: raco pkg install --deps search-auto --link pcsu
+      - run:
+          name: Run Tests
+          command: raco test -x -p pcsu
   test6.0:
     working_directory: ~/pcsu
     docker:
