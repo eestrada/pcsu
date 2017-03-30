@@ -1,6 +1,110 @@
 version: 2
 jobs:
-  build:
+  test6.0:
+    working_directory: ~/pcsu
+    docker:
+      - image: jackfirth/racket:6.0
+    steps:
+      - checkout
+      - run:
+          name: Install as Linked Package
+          working_directory: racket
+          command: raco pkg install --deps search-auto --link pcsu
+      - run:
+          name: Run Tests
+          command: raco test -x -p pcsu
+  test6.1:
+    working_directory: ~/pcsu
+    docker:
+      - image: jackfirth/racket:6.1
+    steps:
+      - checkout
+      - run:
+          name: Install as Linked Package
+          working_directory: racket
+          command: raco pkg install --deps search-auto --link pcsu
+      - run:
+          name: Run Tests
+          command: raco test -x -p pcsu
+  test6.2:
+    working_directory: ~/pcsu
+    docker:
+      - image: jackfirth/racket:6.2
+    steps:
+      - checkout
+      - run:
+          name: Install as Linked Package
+          working_directory: racket
+          command: raco pkg install --deps search-auto --link pcsu
+      - run:
+          name: Run Tests
+          command: raco test -x -p pcsu
+  test6.3:
+    working_directory: ~/pcsu
+    docker:
+      - image: jackfirth/racket:6.3
+    steps:
+      - checkout
+      - run:
+          name: Install as Linked Package
+          working_directory: racket
+          command: raco pkg install --deps search-auto --link pcsu
+      - run:
+          name: Run Tests
+          command: raco test -x -p pcsu
+  test6.4:
+    working_directory: ~/pcsu
+    docker:
+      - image: jackfirth/racket:6.4
+    steps:
+      - checkout
+      - run:
+          name: Install as Linked Package
+          working_directory: racket
+          command: raco pkg install --deps search-auto --link pcsu
+      - run:
+          name: Run Tests
+          command: raco test -x -p pcsu
+  test6.5:
+    working_directory: ~/pcsu
+    docker:
+      - image: jackfirth/racket:6.5
+    steps:
+      - checkout
+      - run:
+          name: Install as Linked Package
+          working_directory: racket
+          command: raco pkg install --deps search-auto --link pcsu
+      - run:
+          name: Run Tests
+          command: raco test -x -p pcsu
+  test6.6:
+    working_directory: ~/pcsu
+    docker:
+      - image: jackfirth/racket:6.6
+    steps:
+      - checkout
+      - run:
+          name: Install as Linked Package
+          working_directory: racket
+          command: raco pkg install --deps search-auto --link pcsu
+      - run:
+          name: Run Tests
+          command: raco test -x -p pcsu
+  test6.7:
+    working_directory: ~/pcsu
+    docker:
+      - image: jackfirth/racket:6.7
+    steps:
+      - checkout
+      - run:
+          name: Install as Linked Package
+          working_directory: racket
+          command: raco pkg install --deps search-auto --link pcsu
+      - run:
+          name: Run Tests
+          command: raco test -x -p pcsu
+  test6.8:
     working_directory: ~/pcsu
     docker:
       - image: jackfirth/racket:6.8
@@ -13,20 +117,3 @@ jobs:
       - run:
           name: Run Tests
           command: raco test -x -p pcsu
-      # # this can be removed
-      # - run:
-      #     name: Locate site Packages
-      #     command: python -c "import site; print(site.getsitepackages())"
-      # # Upload test results
-      # - store_test_results:
-      #     path: /tmp/test-results
-      # # Save artifacts
-      # - store_artifacts:
-      #     path: /tmp/artifacts
-      #     destination: build
-      # # Deploy staging
-      # - deploy:
-      #     command: |
-      #       if [ "${CIRCLE_BRANCH}" == "staging" ];
-      #         then ansible-playbook site.yml -i staging;
-      #       fi
