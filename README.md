@@ -1,6 +1,6 @@
 # PCSU
 
-[![Run Status](https://api.shippable.com/projects/58afc19ab1c2a40600ebbf37/badge?branch=master)](https://app.shippable.com/github/eestrada/pcsu)
+[![Run Status](https://api.shippable.com/projects/5d119bef0f07040006465d5e/badge?branch=master)](https://app.shippable.com/github/eestrada/pcsu)
 
 --------------------------------------------------------------------
 
